@@ -1,0 +1,8 @@
+.venv/
+dist/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.poetry-cache/
+.pytest_cache/

@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "finalproject_Rozdorozhnyi_M25_555"
+version = "0.1.0"
+description = "Console currency wallet application"
+authors = ["Ilya Rozdorozhnyi <you@example.com>"]
+readme = "README.md"
+
+packages = [
+    { include = "src" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+prettytable = "^3.11.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.6.0"
+
+[tool.poetry.scripts]
+project = "src.wallet_app.main:main"
+database = "src.wallet_app.main:main"  # если хочешь только project — можешь убрать эту строку
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# ---------- Ruff ----------
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = ["venv", ".venv", "dist", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
+
