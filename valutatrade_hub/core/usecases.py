@@ -1,9 +1,15 @@
+
 from __future__ import annotations
 
 import secrets
 from datetime import datetime
 from typing import Dict, Optional, Tuple
 
+from valutatrade_hub.decorators import log_action
+from valutatrade_hub.infra.settings import SettingsLoader
+
+from .currencies import get_currency
+from .exceptions import ApiRequestError
 from .models import Portfolio, User
 from .utils import (
     find_portfolio_record,
@@ -18,6 +24,9 @@ from .utils import (
     save_users,
     user_from_record,
 )
+
+settings = SettingsLoader()
+
 
 
 def register_user(username: str, password: str) -> str:
@@ -144,9 +153,27 @@ def show_portfolio(user: User, base_currency: str = "USD") -> str:
 
 
 def get_rate_pair(from_code: str, to_code: str) -> Tuple[Optional[float], str]:
+    get_currency(from_code)
+    get_currency(to_code)
+
     from_c = from_code.upper()
     to_c = to_code.upper()
+
     rates = load_rates()
+    ttl = settings.get("RATES_TTL_SECONDS", 31536000)
+
+    last_refresh_str = rates.get("last_refresh")
+    if last_refresh_str:
+        try:
+            last_refresh = datetime.fromisoformat(last_refresh_str)
+            age_seconds = (datetime.now() - last_refresh).total_seconds()
+            if age_seconds > float(ttl):
+                # здесь по ТЗ надо дернуть Parser Service
+                # пока считаем, что он недоступен
+                raise ApiRequestError("источник курсов недоступен")
+        except ValueError:
+            # битая дата — игнорируем TTL
+            pass
 
     direct_key = f"{from_c}_{to_c}"
     record = rates.get(direct_key)
@@ -164,7 +191,7 @@ def get_rate_pair(from_code: str, to_code: str) -> Tuple[Optional[float], str]:
     if isinstance(record, dict) and "rate" in record:
         rev_rate = float(record["rate"])
         if rev_rate == 0:
-            return None, f"Курс {from_c}→{to_c} недоступен. Повторите попытку позже."
+            raise ApiRequestError("получен нулевой курс из кеша")
         rate = 1.0 / rev_rate
         updated_at = record.get("updated_at", "")
         msg = (
@@ -175,10 +202,17 @@ def get_rate_pair(from_code: str, to_code: str) -> Tuple[Optional[float], str]:
 
     return None, f"Курс {from_c}→{to_c} недоступен. Повторите попытку позже."
 
-
-def buy_currency(user: User, currency_code: str, amount: float) -> str:
+    
+@log_action("BUY")
+def buy_currency(
+    user: User,
+    currency_code: str,
+    amount: float,
+) -> str:
     if amount <= 0:
-        return "'amount' должен быть положительным числом"
+        raise ValueError("'amount' должен быть положительным числом")
+
+    get_currency(currency_code)
 
     code = currency_code.upper()
     portfolio = load_user_portfolio(user)
@@ -186,9 +220,9 @@ def buy_currency(user: User, currency_code: str, amount: float) -> str:
     if wallet is None:
         wallet = portfolio.add_currency(code)
 
-    rate, _ = get_rate_pair(code, "USD")
+    rate, _msg = get_rate_pair(code, "USD")
     if rate is None:
-        return f"Не удалось получить курс для {code}→USD"
+        raise ApiRequestError(f"Не удалось получить курс для {code}→USD")
 
     before = wallet.balance
     wallet.deposit(amount)
@@ -208,9 +242,16 @@ def buy_currency(user: User, currency_code: str, amount: float) -> str:
     )
 
 
-def sell_currency(user: User, currency_code: str, amount: float) -> str:
+@log_action("SELL")
+def sell_currency(
+    user: User,
+    currency_code: str,
+    amount: float,
+) -> str:
     if amount <= 0:
-        return "'amount' должен быть положительным числом"
+        raise ValueError("'amount' должен быть положительным числом")
+
+    get_currency(currency_code)
 
     code = currency_code.upper()
     portfolio = load_user_portfolio(user)
@@ -221,15 +262,9 @@ def sell_currency(user: User, currency_code: str, amount: float) -> str:
             "она создаётся автоматически при первой покупке."
         )
 
-    if amount > wallet.balance:
-        return (
-            f"Недостаточно средств: доступно {wallet.balance:.4f} {code}, "
-            f"требуется {amount:.4f} {code}"
-        )
-
-    rate, _ = get_rate_pair(code, "USD")
+    rate, _msg = get_rate_pair(code, "USD")
     if rate is None:
-        return f"Не удалось получить курс для {code}→USD"
+        raise ApiRequestError(f"Не удалось получить курс для {code}→USD")
 
     before = wallet.balance
     wallet.withdraw(amount)

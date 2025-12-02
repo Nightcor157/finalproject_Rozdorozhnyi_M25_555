@@ -4,6 +4,11 @@ from __future__ import annotations
 import shlex
 from typing import Dict, Optional
 
+from valutatrade_hub.core.exceptions import (
+    ApiRequestError,
+    CurrencyNotFoundError,
+    InsufficientFundsError,
+)
 from valutatrade_hub.core.models import User
 from valutatrade_hub.core.usecases import (
     buy_currency,
@@ -43,6 +48,8 @@ def _print_help() -> None:
     print("  exit\n")
 
 
+
+
 def run_cli() -> None:
     current_user: Optional[User] = None
     print("*** Платформа валютного кошелька ***")
@@ -68,136 +75,143 @@ def run_cli() -> None:
         args = parts[1:]
         options = _parse_options(args)
 
+        try:
+            if command == "exit":
+                print("Выход.")
+                break
 
-        if command == "exit":
-            print("Выход.")
-            break
-
-        if command == "help":
-            _print_help()
-            continue
-
-
-        if command == "register":
-            username = options.get("username", "")
-            password = options.get("password", "")
-
-            if not username:
-                print("Требуется параметр --username")
-                continue
-            if not password:
-                print("Требуется параметр --password")
+            if command == "help":
+                _print_help()
                 continue
 
-            message = register_user(username, password)
-            print(message)
-            continue
+            if command == "register":
+                username = options.get("username", "")
+                password = options.get("password", "")
 
+                if not username:
+                    print("Требуется параметр --username")
+                    continue
+                if not password:
+                    print("Требуется параметр --password")
+                    continue
 
-        if command == "login":
-            username = options.get("username", "")
-            password = options.get("password", "")
-
-            if not username:
-                print("Требуется параметр --username")
+                message = register_user(username, password)
+                print(message)
                 continue
-            if not password:
-                print("Требуется параметр --password")
+
+            if command == "login":
+                username = options.get("username", "")
+                password = options.get("password", "")
+
+                if not username:
+                    print("Требуется параметр --username")
+                    continue
+                if not password:
+                    print("Требуется параметр --password")
+                    continue
+
+                user, message = login_user(username, password)
+                print(message)
+                if user is not None:
+                    current_user = user
                 continue
 
-            user, message = login_user(username, password)
-            print(message)
-            if user is not None:
-                current_user = user
-            continue
+            if command in {"show-portfolio", "buy", "sell"} and current_user is None:
+                print("Сначала выполните login")
+                continue
 
+            if command == "show-portfolio":
+                base = options.get("base", "USD")
+                text = show_portfolio(
+                    current_user,  # type: ignore[arg-type]
+                    base_currency=base,
+                )
+                print(text)
+                continue
 
-        if command in {"show-portfolio", "buy", "sell"} and current_user is None:
-            print("Сначала выполните login")
-            continue
+            if command == "buy":
+                currency = options.get("currency", "").upper()
+                amount_str = options.get("amount", "")
 
+                if not currency:
+                    print("Требуется параметр --currency")
+                    continue
+                if not amount_str:
+                    print("Требуется параметр --amount")
+                    continue
 
-        if command == "show-portfolio":
-            base = options.get("base", "USD")
-            text = show_portfolio(
-                current_user,  # type: ignore[arg-type]
-                base_currency=base,
+                try:
+                    amount = float(amount_str)
+                except ValueError:
+                    print("'amount' должен быть положительным числом")
+                    continue
+
+                message = buy_currency(
+                    current_user,  # type: ignore[arg-type]
+                    currency,
+                    amount,
+                )
+                print(message)
+                continue
+
+            if command == "sell":
+                currency = options.get("currency", "").upper()
+                amount_str = options.get("amount", "")
+
+                if not currency:
+                    print("Требуется параметр --currency")
+                    continue
+                if not amount_str:
+                    print("Требуется параметр --amount")
+                    continue
+
+                try:
+                    amount = float(amount_str)
+                except ValueError:
+                    print("'amount' должен быть положительным числом")
+                    continue
+
+                message = sell_currency(
+                    current_user,  # type: ignore[arg-type]
+                    currency,
+                    amount,
+                )
+                print(message)
+                continue
+
+            if command == "get-rate":
+                from_code = options.get("from", "").upper()
+                to_code = options.get("to", "").upper()
+
+                if not from_code or not to_code:
+                    print("Нужно указать --from и --to")
+                    continue
+
+                rate, msg = get_rate_pair(from_code, to_code)
+                print(msg)
+                if rate is not None:
+                    rev_rate, _ = get_rate_pair(to_code, from_code)
+                    if rev_rate is not None:
+                        print(
+                            f"Обратный курс {to_code}→{from_code}: "
+                            f"{rev_rate:.8f}",
+                        )
+                continue
+
+            print(f"Неизвестная команда: {command}. Введите 'help' для списка.")
+
+        except InsufficientFundsError as exc:
+            print(str(exc))
+        except CurrencyNotFoundError as exc:
+            print(str(exc))
+            print(
+                "Проверьте код валюты или используйте команду "
+                "get-rate для поддерживаемых пар.",
             )
-            print(text)
-            continue
+        except ApiRequestError as exc:
+            print(str(exc))
+            print("Повторите попытку позже или проверьте подключение к сети.")
+        except ValueError as exc:
+            print(str(exc))
 
-
-        if command == "buy":
-            currency = options.get("currency", "").upper()
-            amount_str = options.get("amount", "")
-
-            if not currency:
-                print("Требуется параметр --currency")
-                continue
-            if not amount_str:
-                print("Требуется параметр --amount")
-                continue
-
-            try:
-                amount = float(amount_str)
-            except ValueError:
-                print("'amount' должен быть положительным числом")
-                continue
-
-            message = buy_currency(
-                current_user,  # type: ignore[arg-type]
-                currency,
-                amount,
-            )
-            print(message)
-            continue
-
-
-        if command == "sell":
-            currency = options.get("currency", "").upper()
-            amount_str = options.get("amount", "")
-
-            if not currency:
-                print("Требуется параметр --currency")
-                continue
-            if not amount_str:
-                print("Требуется параметр --amount")
-                continue
-
-            try:
-                amount = float(amount_str)
-            except ValueError:
-                print("'amount' должен быть положительным числом")
-                continue
-
-            message = sell_currency(
-                current_user,  # type: ignore[arg-type]
-                currency,
-                amount,
-            )
-            print(message)
-            continue
-
-
-        if command == "get-rate":
-            from_code = options.get("from", "").upper()
-            to_code = options.get("to", "").upper()
-
-            if not from_code or not to_code:
-                print("Нужно указать --from и --to")
-                continue
-
-            rate, msg = get_rate_pair(from_code, to_code)
-            print(msg)
-            if rate is not None:
-                rev_rate, _ = get_rate_pair(to_code, from_code)
-                if rev_rate is not None:
-                    print(
-                        f"Обратный курс {to_code}→{from_code}: "
-                        f"{rev_rate:.8f}",
-                    )
-            continue
-
-
-        print(f"Неизвестная команда: {command}. Введите 'help' для списка.")
 

@@ -1,38 +1,30 @@
-
 from __future__ import annotations
 
-import json
-import os
 from datetime import datetime
-from json import JSONDecodeError
 from typing import Any, Dict, List, Optional
+
+from valutatrade_hub.infra.database import DatabaseManager
+from valutatrade_hub.infra.settings import SettingsLoader
 
 from .models import Portfolio, User, Wallet
 
-DATA_DIR = "data"
-USERS_FILE = os.path.join(DATA_DIR, "users.json")
-PORTFOLIOS_FILE = os.path.join(DATA_DIR, "portfolios.json")
-RATES_FILE = os.path.join(DATA_DIR, "rates.json")
+settings = SettingsLoader()
+db = DatabaseManager()
 
-
-def _ensure_data_dir() -> None:
-    os.makedirs(DATA_DIR, exist_ok=True)
+DATA_DIR = settings.get("DATA_DIR")
+USERS_FILE = f"{DATA_DIR}/users.json"
+PORTFOLIOS_FILE = f"{DATA_DIR}/portfolios.json"
+RATES_FILE = f"{DATA_DIR}/rates.json"
 
 
 
 
 def load_users() -> List[Dict[str, Any]]:
-    try:
-        with open(USERS_FILE, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except (FileNotFoundError, JSONDecodeError):
-        return []
+    return db.load_json(USERS_FILE, default=[])
 
 
 def save_users(users: List[Dict[str, Any]]) -> None:
-    _ensure_data_dir()
-    with open(USERS_FILE, "w", encoding="utf-8") as file:
-        json.dump(users, file, ensure_ascii=False, indent=2)
+    db.save_json(USERS_FILE, users)
 
 
 def next_user_id(users: List[Dict[str, Any]]) -> int:
@@ -64,17 +56,11 @@ def user_from_record(record: Dict[str, Any]) -> User:
 
 
 def load_portfolios() -> List[Dict[str, Any]]:
-    try:
-        with open(PORTFOLIOS_FILE, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except (FileNotFoundError, JSONDecodeError):
-        return []
+    return db.load_json(PORTFOLIOS_FILE, default=[])
 
 
 def save_portfolios(portfolios: List[Dict[str, Any]]) -> None:
-    _ensure_data_dir()
-    with open(PORTFOLIOS_FILE, "w", encoding="utf-8") as file:
-        json.dump(portfolios, file, ensure_ascii=False, indent=2)
+    db.save_json(PORTFOLIOS_FILE, portfolios)
 
 
 def find_portfolio_record(
@@ -112,15 +98,9 @@ def portfolio_to_record(portfolio: Portfolio) -> Dict[str, Any]:
 
 
 def load_rates() -> Dict[str, Any]:
-    try:
-        with open(RATES_FILE, "r", encoding="utf-8") as file:
-            return json.load(file)
-    except (FileNotFoundError, JSONDecodeError):
-        return {}
+    return db.load_json(RATES_FILE, default={})
 
 
 def save_rates(rates: Dict[str, Any]) -> None:
-    _ensure_data_dir()
-    with open(RATES_FILE, "w", encoding="utf-8") as file:
-        json.dump(rates, file, ensure_ascii=False, indent=2)
+    db.save_json(RATES_FILE, rates)
 

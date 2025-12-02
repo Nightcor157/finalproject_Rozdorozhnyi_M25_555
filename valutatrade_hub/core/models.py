@@ -5,6 +5,8 @@ import hashlib
 from datetime import datetime
 from typing import Dict, Optional
 
+from .exceptions import InsufficientFundsError
+
 
 class User:
 
@@ -101,7 +103,11 @@ class Wallet:
         if amount <= 0:
             raise ValueError("'amount' должен быть положительным числом")
         if amount > self._balance:
-            raise ValueError("Недостаточно средств для списания.")
+            raise InsufficientFundsError(
+                available=self._balance,
+                required=amount,
+                code=self.currency_code,
+            )
         self._balance -= float(amount)
 
     def get_balance_info(self) -> str:
