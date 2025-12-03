@@ -7,6 +7,8 @@ make install
 
 make project
 
+export EXCHANGERATE_API_KEY="Ваш API ключ для запросов"
+
 #Примеры команд
 
 register --username alice --password 1234
