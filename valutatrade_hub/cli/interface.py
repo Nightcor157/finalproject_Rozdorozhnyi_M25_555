@@ -237,10 +237,10 @@ def run_cli() -> None:
                     )
                     continue
 
-                message, ok = login_user(username, password)
+                user, message = login_user(username, password)
                 print(message)
-                if ok:
-                    current_user = username
+                if user is not None:
+                    current_user = user
                 continue
 
 

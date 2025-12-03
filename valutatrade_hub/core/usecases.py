@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Optional, Tuple
 
 from valutatrade_hub.decorators import log_action
@@ -168,7 +168,8 @@ def get_rate_pair(from_code: str, to_code: str) -> Tuple[Optional[float], str]:
             last_refresh = datetime.fromisoformat(
                 last_refresh_str.replace("Z", "+00:00"),
             )
-            age_seconds = (datetime.now() - last_refresh).total_seconds()
+            now_utc = datetime.now(timezone.utc)
+            age_seconds = (now_utc - last_refresh).total_seconds()
             if age_seconds > float(ttl):
                 raise ApiRequestError("источник курсов недоступен (кеш устарел)")
         except ValueError:

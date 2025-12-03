@@ -10,3 +10,8 @@ INFO 2025-12-03T12:14:23 Fetching from CoinGecko... OK (3 rates)
 INFO 2025-12-03T12:14:23 Fetching from ExchangeRate-API...
 INFO 2025-12-03T12:14:23 Fetching from ExchangeRate-API... OK (3 rates)
 INFO 2025-12-03T12:14:23 Rates update finished: 6 pairs, last_refresh=2025-12-03T09:14:23.890772Z
+ERROR 2025-12-03T12:43:25 BUY 2025-12-03T12:43:25.953641 user='alice' currency='BTC' amount=0.01 result=ERROR error_type=TypeError error_message=can't subtract offset-naive and offset-aware datetimes
+INFO 2025-12-03T12:46:38 BUY 2025-12-03T12:46:38.235296 user='alice' currency='BTC' amount=0.01 result=OK
+INFO 2025-12-03T12:48:42 BUY 2025-12-03T12:48:42.597414 user='alice' currency='BTC' amount=0.01 result=OK
+INFO 2025-12-03T12:48:48 BUY 2025-12-03T12:48:48.389477 user='alice' currency='EUR' amount=50.0 result=OK
+INFO 2025-12-03T12:49:03 SELL 2025-12-03T12:49:03.380439 user='alice' currency='EUR' amount=10.0 result=OK
