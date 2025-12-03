@@ -1,0 +1,101 @@
+[
+  {
+    "id": "BTC_USD_2025-12-03T09:11:28.128140Z",
+    "from_currency": "BTC",
+    "to_currency": "USD",
+    "rate": 92804.0,
+    "timestamp": "2025-12-03T09:11:28.128140Z",
+    "source": "CoinGecko",
+    "meta": {
+      "source_client": "CoinGecko"
+    }
+  },
+  {
+    "id": "ETH_USD_2025-12-03T09:11:28.128140Z",
+    "from_currency": "ETH",
+    "to_currency": "USD",
+    "rate": 3048.44,
+    "timestamp": "2025-12-03T09:11:28.128140Z",
+    "source": "CoinGecko",
+    "meta": {
+      "source_client": "CoinGecko"
+    }
+  },
+  {
+    "id": "SOL_USD_2025-12-03T09:11:28.128140Z",
+    "from_currency": "SOL",
+    "to_currency": "USD",
+    "rate": 142.17,
+    "timestamp": "2025-12-03T09:11:28.128140Z",
+    "source": "CoinGecko",
+    "meta": {
+      "source_client": "CoinGecko"
+    }
+  },
+  {
+    "id": "BTC_USD_2025-12-03T09:14:23.892784Z",
+    "from_currency": "BTC",
+    "to_currency": "USD",
+    "rate": 92834.0,
+    "timestamp": "2025-12-03T09:14:23.892784Z",
+    "source": "CoinGecko",
+    "meta": {
+      "source_client": "CoinGecko"
+    }
+  },
+  {
+    "id": "ETH_USD_2025-12-03T09:14:23.892784Z",
+    "from_currency": "ETH",
+    "to_currency": "USD",
+    "rate": 3051.51,
+    "timestamp": "2025-12-03T09:14:23.892784Z",
+    "source": "CoinGecko",
+    "meta": {
+      "source_client": "CoinGecko"
+    }
+  },
+  {
+    "id": "SOL_USD_2025-12-03T09:14:23.892784Z",
+    "from_currency": "SOL",
+    "to_currency": "USD",
+    "rate": 142.2,
+    "timestamp": "2025-12-03T09:14:23.892784Z",
+    "source": "CoinGecko",
+    "meta": {
+      "source_client": "CoinGecko"
+    }
+  },
+  {
+    "id": "EUR_USD_2025-12-03T09:14:23.893296Z",
+    "from_currency": "EUR",
+    "to_currency": "USD",
+    "rate": 0.8608,
+    "timestamp": "2025-12-03T09:14:23.893296Z",
+    "source": "ExchangeRate-API",
+    "meta": {
+      "source_client": "ExchangeRate-API"
+    }
+  },
+  {
+    "id": "GBP_USD_2025-12-03T09:14:23.893296Z",
+    "from_currency": "GBP",
+    "to_currency": "USD",
+    "rate": 0.757,
+    "timestamp": "2025-12-03T09:14:23.893296Z",
+    "source": "ExchangeRate-API",
+    "meta": {
+      "source_client": "ExchangeRate-API"
+    }
+  },
+  {
+    "id": "RUB_USD_2025-12-03T09:14:23.893296Z",
+    "from_currency": "RUB",
+    "to_currency": "USD",
+    "rate": 77.5574,
+    "timestamp": "2025-12-03T09:14:23.893296Z",
+    "source": "ExchangeRate-API",
+    "meta": {
+      "source_client": "ExchangeRate-API"
+    }
+  }
+]

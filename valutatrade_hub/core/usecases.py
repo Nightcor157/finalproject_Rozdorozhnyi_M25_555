@@ -165,18 +165,19 @@ def get_rate_pair(from_code: str, to_code: str) -> Tuple[Optional[float], str]:
     last_refresh_str = rates.get("last_refresh")
     if last_refresh_str:
         try:
-            last_refresh = datetime.fromisoformat(last_refresh_str)
+            last_refresh = datetime.fromisoformat(
+                last_refresh_str.replace("Z", "+00:00"),
+            )
             age_seconds = (datetime.now() - last_refresh).total_seconds()
             if age_seconds > float(ttl):
-                # здесь по ТЗ надо дернуть Parser Service
-                # пока считаем, что он недоступен
-                raise ApiRequestError("источник курсов недоступен")
+                raise ApiRequestError("источник курсов недоступен (кеш устарел)")
         except ValueError:
-            # битая дата — игнорируем TTL
             pass
 
+    pairs = rates.get("pairs", {})
+
     direct_key = f"{from_c}_{to_c}"
-    record = rates.get(direct_key)
+    record = pairs.get(direct_key)
     if isinstance(record, dict) and "rate" in record:
         rate = float(record["rate"])
         updated_at = record.get("updated_at", "")
@@ -187,7 +188,7 @@ def get_rate_pair(from_code: str, to_code: str) -> Tuple[Optional[float], str]:
         return rate, msg
 
     reverse_key = f"{to_c}_{from_c}"
-    record = rates.get(reverse_key)
+    record = pairs.get(reverse_key)
     if isinstance(record, dict) and "rate" in record:
         rev_rate = float(record["rate"])
         if rev_rate == 0:
@@ -201,6 +202,7 @@ def get_rate_pair(from_code: str, to_code: str) -> Tuple[Optional[float], str]:
         return rate, msg
 
     return None, f"Курс {from_c}→{to_c} недоступен. Повторите попытку позже."
+
 
     
 @log_action("BUY")
